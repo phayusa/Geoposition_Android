@@ -18,15 +18,19 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-public class Main_Activity extends AppCompatActivity implements LocationListener {
+public class Main_Activity extends AppCompatActivity implements LocationListener, ReceiveInfo{
     private TextView latituteField;
     private TextView longitudeField;
+    private TextView vehicleField;
     private LocationManager locationManager;
     private String provider;
     private final static int LOCATION_KEY = 100;
     private String token;
     private String ipAdress;
+    private String session_id;
+    private String csrf_token;
     private LocationSender sender;
+    private Vehicle vehicle;
 
     public void ask_permission(String permission, int key_asked) {
         ActivityCompat.requestPermissions(this,
@@ -111,18 +115,23 @@ public class Main_Activity extends AppCompatActivity implements LocationListener
         setContentView(R.layout.activity_main);
         check_permission();
 
-        /*
         Bundle extras = getIntent().getExtras();
         token = extras.getString(getString(R.string.key_token));
-        ipAdress = extras.getString(getString(R.string.key_ip));*/
+        ipAdress = extras.getString(getString(R.string.key_ip));
+        session_id = extras.getString("sessionid");
+        csrf_token = extras.getString("csrftoken");
 
-        sender = new LocationSender(getApplicationContext(), "jfidfdfi", "192.168.0.100:9999");
+        sender = new LocationSender(token, ipAdress);
 
 
         latituteField = ((TextView) findViewById(R.id.Latitude_Field));
         longitudeField = ((TextView) findViewById(R.id.Longitude_Field));
+        vehicleField = ((TextView) findViewById(R.id.vehicle_field));
 
         create_location_manager();
+
+        vehicle = new Vehicle(ipAdress,token,session_id, csrf_token, this);
+
     }
 
     /* Request updates at startup */
@@ -154,8 +163,11 @@ public class Main_Activity extends AppCompatActivity implements LocationListener
         latituteField.setText(String.valueOf(lat));
         longitudeField.setText(String.valueOf(lng));
 
-        if (isOnline())
-            sender.send_location(lat, lng);
+        if(vehicle != null && vehicle.getId() != 0)
+            sender.send_location(vehicle.getId(),lat,lng);
+
+        //if (isOnline())
+            //ssender.send_location(lat, lng);
     }
 
     @Override
@@ -200,5 +212,8 @@ public class Main_Activity extends AppCompatActivity implements LocationListener
                 cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
-
+    @Override
+    public void afterReceive(String info) {
+        vehicleField.setText(info);
+    }
 }

@@ -19,16 +19,16 @@ import java.net.URL;
 
 class LocationSender {
     private String token;
-    private Context context;
     private String ip;
+    private int id_to_send;
 
-    public LocationSender(Context _context, String _token, String _ip) {
+    public LocationSender(String _token, String _ip) {
         token = _token;
-        context = _context;
         ip = _ip;
     }
 
-    public void send_location(double latitude, double longitude) {
+    public void send_location(int id_vehicle, double latitude, double longitude) {
+        id_to_send = id_vehicle;
         new RequestTask().execute(latitude,longitude);
     }
 
@@ -49,9 +49,9 @@ class LocationSender {
 
             String responseString;
             try {
-                URL url = new URL("http://" + ip);
+                URL url = new URL("http://" + ip+"/db/vehicle/"+id_to_send+"/");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
+                conn.setRequestMethod("PATCH");
                 conn.setDoOutput(true);
                 conn.setRequestProperty("Content-Type", "application/json");
                 conn.setRequestProperty("Authorization", "JWT " + token);
@@ -60,13 +60,11 @@ class LocationSender {
 
                 JSONObject toSendData = new JSONObject();
                 try {
-                    toSendData.accumulate("latitude", params[0]);
-                    toSendData.accumulate("longitude", params[1]);
+                    toSendData.accumulate("pos", params[0]+","+params[1]);
                 } catch (JSONException e) {
                     e.printStackTrace();
                     return "Problem with the send of Json";
                 }
-                System.out.println("Data " + toSendData.toString());
 
                 OutputStreamWriter writer = new OutputStreamWriter(conn.getOutputStream());
                 writer.write(toSendData.toString());
@@ -75,7 +73,7 @@ class LocationSender {
                 if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
                     responseString = toSendData.toString();
                 } else {
-                    responseString = "Incorrect login";
+                    responseString = "Problem with sended data";
                 }
             } catch (IOException e) {
                 responseString = "Problem with internet connection";
@@ -87,9 +85,6 @@ class LocationSender {
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            System.out.println("result " + result);
-            if (!result.equals(""))
-                Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
         }
     }
 }

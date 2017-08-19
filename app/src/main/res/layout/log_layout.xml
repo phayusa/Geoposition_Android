@@ -66,6 +66,7 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="63dp"
         android:ems="10"
+        android:text="192.169.0.105:1234"
         android:inputType="textPersonName"
         android:hint="IP" />
 </RelativeLayout>

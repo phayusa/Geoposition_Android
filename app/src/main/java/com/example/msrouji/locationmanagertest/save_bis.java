@@ -20,7 +20,7 @@ public class save_bis extends AppCompatActivity  {
     private final static int LOCATION_KEY = 100;
     private String token;
     private String ipAdress;
-    private GPSTracker gps;
+//    private GPSTracker gps;
 
 
     public void ask_permission(String permission, int key_asked) {

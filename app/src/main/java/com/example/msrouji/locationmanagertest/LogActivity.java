@@ -23,11 +23,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 
 public class LogActivity extends Activity {
 
@@ -59,6 +63,7 @@ public class LogActivity extends Activity {
             super.onPreExecute();
         }
 
+
         @Override
         protected String doInBackground(String... params) {
 
@@ -70,11 +75,15 @@ public class LogActivity extends Activity {
 
             String responseString;
             try {
+
                 URL url = new URL(params[0]);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setDoOutput(true);
                 conn.setRequestProperty("Content-Type", "application/json");
+                conn.connect();
+
+                //conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
 
                 JSONObject toSendData = new JSONObject();
@@ -94,26 +103,44 @@ public class LogActivity extends Activity {
                 BufferedReader buff = new BufferedReader(reader);
 
                 responseString = conn.getResponseMessage();
+                System.err.println("la réponse "+responseString);
 
-                if (conn.getResponseMessage().equals("Created")) {
+
+                if (conn.getResponseMessage().equals("Accepted")) {
+
+                    Map<String, List<String>> headerFields = conn.getHeaderFields();
+                    List<String> cookiesHeader = headerFields.get("Set-Cookie");
+
                     String token;
                     try {
                         JSONObject receiveJson = new JSONObject(buff.readLine());
                         token = receiveJson.getString("token");
-                        Intent i = new Intent(getApplicationContext(), save_bis.class);
+                        Intent i = new Intent(getApplicationContext(), Main_Activity.class);
                         i.putExtra(getString(R.string.key_token), token);
                         i.putExtra(getString(R.string.key_ip), params[1]);
+                        if (cookiesHeader != null) {
+                            for (String cookie : conn.getHeaderFields().get("Set-Cookie")) {
+                                i.putExtra(HttpCookie.parse(cookie).get(0).getName(),HttpCookie.parse(cookie).get(0).getValue());
+                            }
+                        }
                         startActivity(i);
                         responseString = " Welcome " + username;
                     } catch (JSONException e) {
                         e.printStackTrace();
                         return "Problem with the receive json";
+                    } catch (NullPointerException n){
+                        n.printStackTrace();
+                        return "No data receive";
                     }
 
-
+                    conn.disconnect();
                 }
 
-            } catch (IOException e) {
+            }catch (FileNotFoundException f){
+                responseString = "Incorrect Login";
+            }
+            catch (IOException e) {
+                //e.printStackTrace();
                 responseString = "Problem with internet connection";
                 //responseString = e.getMessage();
             }
@@ -142,6 +169,8 @@ public class LogActivity extends Activity {
         String password = sharedPref.getString(getString(R.string.key_passwd), "");
         String ip = sharedPref.getString(getString(R.string.key_ip), "");
 
+        ip = "192.168.0.105:1234";
+
         ((EditText) findViewById(R.id.username_field)).setText(username);
         ((EditText) findViewById(R.id.password_field)).setText(password);
         ((EditText) findViewById(R.id.ip_field)).setText(ip);
@@ -149,8 +178,7 @@ public class LogActivity extends Activity {
 
     public void connectionClient(View v) {
         String ip = ((EditText) findViewById(R.id.ip_field)).getText().toString();
-        //String url = "http://" + ip + "/user/login/";
-        String url = "http://" +ip ;
+        String url = "http://" + ip + "/user/login/";
         String username = ((TextView) findViewById(R.id.username_field)).getText().toString();
         String password = ((TextView) findViewById(R.id.password_field)).getText().toString();
 

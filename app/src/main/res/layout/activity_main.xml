@@ -51,6 +51,26 @@
             android:text="unknown"
             android:textSize="20dip" >
         </TextView>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20dip"
+            android:layout_marginLeft="10dip"
+            android:layout_marginRight="5dip"
+            android:text="Voiture : "/>
+        <TextView
+            android:id="@+id/vehicle_field"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="unknown"
+            android:textSize="20dip" />
     </LinearLayout>
 
 </LinearLayout>
